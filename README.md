@@ -16,9 +16,8 @@ import "github.com/deitrix/sqlg"
 
 First, define your scan function. This should be in the signature `func(row sqlg.Row) (T, error)`
 ```go
-func scanUser(row sqlg.Row) (User, error) {
-	var u User
-	err := row.Scan(
+func scanUser(row sqlg.Row) (u User, err error) {
+	return u, row.Scan(
 		&u.ID,
 		&u.Name,
 		&u.Email,
@@ -26,7 +25,6 @@ func scanUser(row sqlg.Row) (User, error) {
 		&u.CreatedAt,
 		&u.UpdatedAt,
 	)
-	return u, err
 }
 ```
 
