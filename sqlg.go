@@ -39,7 +39,12 @@ type dataset[T any] interface {
 	Prepared(bool) T
 }
 
-func Exec[Dataset dataset[Dataset]](ctx context.Context, q Queryable, ds Dataset) (sql.Result, error) {
+func Exec[T dataset[T]](ctx context.Context, q Queryable, ds T) error {
+	_, err := ExecResult(ctx, q, ds)
+	return err
+}
+
+func ExecResult[Dataset dataset[Dataset]](ctx context.Context, q Queryable, ds Dataset) (sql.Result, error) {
 	sql, args, err := ds.Prepared(true).ToSQL()
 	if err != nil {
 		return nil, err
@@ -48,7 +53,7 @@ func Exec[Dataset dataset[Dataset]](ctx context.Context, q Queryable, ds Dataset
 }
 
 func ExecID[Dataset dataset[Dataset]](ctx context.Context, q Queryable, ds Dataset) (int, error) {
-	result, err := Exec(ctx, q, ds)
+	result, err := ExecResult(ctx, q, ds)
 	if err != nil {
 		return 0, err
 	}
@@ -60,7 +65,7 @@ func ExecID[Dataset dataset[Dataset]](ctx context.Context, q Queryable, ds Datas
 }
 
 func ExecRowsAffected[Dataset dataset[Dataset]](ctx context.Context, q Queryable, ds Dataset) (int, error) {
-	result, err := Exec(ctx, q, ds)
+	result, err := ExecResult(ctx, q, ds)
 	if err != nil {
 		return 0, err
 	}
