@@ -3,7 +3,10 @@ package sqlg
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 )
+
+var Debug bool
 
 type Queryable interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
@@ -12,9 +15,12 @@ type Queryable interface {
 }
 
 func SelectAll[T any, Dataset dataset[Dataset]](ctx context.Context, q Queryable, scan ScanFunc[T], ds Dataset) ([]T, error) {
-	sql, args, err := ds.Prepared(true).ToSQL()
+	sql, args, err := ds.Prepared(!Debug).ToSQL()
 	if err != nil {
 		return nil, err
+	}
+	if Debug {
+		slog.Debug(sql)
 	}
 	rows, err := q.QueryContext(ctx, sql, args...)
 	if err != nil {
@@ -25,10 +31,13 @@ func SelectAll[T any, Dataset dataset[Dataset]](ctx context.Context, q Queryable
 }
 
 func Select[T any, Dataset dataset[Dataset]](ctx context.Context, q Queryable, scan ScanFunc[T], ds Dataset) (T, error) {
-	sql, args, err := ds.Prepared(true).ToSQL()
+	sql, args, err := ds.Prepared(!Debug).ToSQL()
 	if err != nil {
 		var zero T
 		return zero, err
+	}
+	if Debug {
+		slog.Debug(sql)
 	}
 	row := q.QueryRowContext(ctx, sql, args...)
 	return scan(row)
@@ -45,9 +54,12 @@ func Exec[T dataset[T]](ctx context.Context, q Queryable, ds T) error {
 }
 
 func ExecResult[Dataset dataset[Dataset]](ctx context.Context, q Queryable, ds Dataset) (sql.Result, error) {
-	sql, args, err := ds.Prepared(true).ToSQL()
+	sql, args, err := ds.Prepared(!Debug).ToSQL()
 	if err != nil {
 		return nil, err
+	}
+	if Debug {
+		slog.Debug(sql)
 	}
 	return q.ExecContext(ctx, sql, args...)
 }
